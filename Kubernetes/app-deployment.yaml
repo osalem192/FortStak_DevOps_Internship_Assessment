@@ -45,3 +45,17 @@ spec:
           limits:
             memory: "256Mi"
             cpu: "200m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-app-service
+spec:
+  selector:
+    app: todo-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 4000
+      nodePort: 30001  # (must be in 30000–32767 range)
+  type: NodePort
