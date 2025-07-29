@@ -1,0 +1,52 @@
+- name: Install pip
+  apt:
+    name: "python3-pip"
+    state: present
+    update_cache: yes
+
+- name: Install Python kubernetes package
+  ansible.builtin.pip:
+    name: kubernetes
+    executable: pip3
+
+- name: Add Helm repo for ArgoCD
+  shell: helm repo add argo https://argoproj.github.io/argo-helm
+  args:
+    creates: /root/.cache/helm/repository/argo-index.yaml
+
+- name: Update Helm repos
+  shell: helm repo update
+
+- name: Create ArgoCD namespace
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: argocd
+    state: present
+    kubeconfig: /home/osalem/.kube/config
+  ignore_errors: yes
+
+- name: Install ArgoCD via Helm
+  community.kubernetes.helm:
+    name: argocd
+    chart_ref: argo/argo-cd
+    release_namespace: argocd
+    create_namespace: false
+    update_repo_cache: true
+    kubeconfig: /home/osalem/.kube/config
+    state: present
+
+- name: portforward argocd
+  shell: nohup kubectl port-forward service/argocd-server -n argocd 8080:443 > /tmp/argocd-portforward.log 2>&1 &
+  environment:
+    KUBECONFIG: /home/osalem/.kube/config
+
+- name: get ArgoCD admin initial password
+  shell: kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+  environment:
+    KUBECONFIG: /home/osalem/.kube/config
+  register: argocd_pass
+
+- name: Print ArgoCD password
+  debug:
+    msg: "ArgoCD default admin password is: {{ argocd_pass.stdout }}" 

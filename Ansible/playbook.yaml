@@ -1,0 +1,10 @@
+---
+- name: Install Docker, Minikube and Kubectl
+  hosts: all
+  become: true
+  vars:
+    my_username: "osalem" 
+  roles:
+    - docker
+    - minikube
+    - argocd
