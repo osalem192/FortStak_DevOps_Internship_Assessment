@@ -76,14 +76,11 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
           # Check if there are changes to commit
-          if git diff --quiet; then
-            echo "No changes to commit"
-          else
+
             git add .
             git commit -m "Update deployment image to ${{ steps.image-tag.outputs.full-image-name }} [skip ci]"
             git push
             echo "Successfully pushed to ArgoCD repository"
-          fi
 
       - name: Output deployment information
         run: |
